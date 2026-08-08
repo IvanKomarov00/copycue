@@ -33,6 +33,7 @@
     "url": "https://github.com/IvanKomarov00/copycue/issues"
   },
   "scripts": {
+    "build:icon": "node scripts/build-icon.js",
     "build:app": "./scripts/build-app.sh",
     "test:swift": "zsh ./scripts/test-swift.sh",
     "test:installer": "node --test npm/test/*.test.js",

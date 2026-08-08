@@ -28,6 +28,7 @@ swift build "${SWIFT_BUILD_FLAGS[@]}"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 install -m 755 ".build/release/CopyCue" "$MACOS_DIR/CopyCue"
 install -m 644 "Resources/Info.plist" "$CONTENTS_DIR/Info.plist"
+install -m 644 "Resources/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
 
 xattr -cr "$STAGED_APP_DIR"
 codesign --force --deep --sign - "$STAGED_APP_DIR"

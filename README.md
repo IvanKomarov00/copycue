@@ -1,5 +1,9 @@
 # CopyCue
 
+<p align="center">
+  <img src="Resources/AppIcon.png" width="128" height="128" alt="CopyCue app icon">
+</p>
+
 [![CI](https://github.com/IvanKomarov00/copycue/actions/workflows/ci.yml/badge.svg)](https://github.com/IvanKomarov00/copycue/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/%40morning-corp%2Fcopycue)](https://www.npmjs.com/package/@morning-corp/copycue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -82,6 +86,12 @@ open dist/CopyCue.app
 ```
 
 The build script creates an ad-hoc-signed app at `dist/CopyCue.app`.
+
+The repository includes the 1024px icon master and generated ICNS file. If you change the master artwork, regenerate the native icon before building:
+
+```bash
+npm run build:icon
+```
 
 ## Test
 
