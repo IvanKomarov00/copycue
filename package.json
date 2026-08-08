@@ -2,7 +2,7 @@
   "name": "@morning-corp/copycue",
   "version": "0.1.1",
   "description": "One-command installer for the CopyCue macOS clipboard feedback utility",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "commonjs",
   "bin": {
     "copycue": "npm/bin/copycue.js"

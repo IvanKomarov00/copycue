@@ -1,41 +1,87 @@
 # CopyCue
 
-CopyCue is a minimal native macOS utility that confirms successful clipboard changes with a small rounded capsule beneath the pointer and a temporary white circled check in the menu bar. It keeps only the current and immediately previous text values, so an accidentally overwritten copy can be restored from the menu bar.
+[![CI](https://github.com/IvanKomarov00/copycue/actions/workflows/ci.yml/badge.svg)](https://github.com/IvanKomarov00/copycue/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/%40morning-corp%2Fcopycue)](https://www.npmjs.com/package/@morning-corp/copycue)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## MVP behavior
+Copy with confidence on macOS.
 
-- Watches the macOS pasteboard rather than global keyboard events.
-- Shows a brief Apple-blue capsule beneath the pointer for any clipboard change.
-- Holds a white circled checkmark in the menu bar for two seconds.
-- Provides Short, Medium, and Long cursor-feedback timing in Settings.
-- Keeps the last two distinct text values in memory only.
-- Restores the previous text from the menu-bar menu.
-- Shows the blue cursor indicator when an older value is restored.
-- Does not appear in the Dock or application switcher.
-- Clears its two-item history when it quits.
+CopyCue is a lightweight native menu-bar app that makes successful clipboard changes visible. Whenever the macOS clipboard changes, CopyCue briefly shows an Apple-blue indicator beneath the pointer and a confirmation in the menu bar. If a second copy overwrites something important, the immediately previous text remains available to restore.
 
-CopyCue reads clipboard text only after macOS reports that the pasteboard changed. Non-text copies still receive visual confirmation but are not added to text history.
+## Why CopyCue?
 
-## Install from npm
+Pasting provides instant feedback; copying usually does not. CopyCue closes that gap without monitoring global keyboard input. It observes the macOS pasteboard itself, so it also detects copies made from context menus or other application controls.
 
-The npm release installs CopyCue into `~/Applications` and opens it with one command:
+## Features
+
+- Confirms clipboard changes with subtle cursor and menu-bar feedback.
+- Keeps only the current and immediately previous distinct text values.
+- Restores accidentally overwritten text from the menu-bar menu.
+- Offers 0.5, 1, and 2 second cursor-feedback durations.
+- Runs as a native menu-bar utility without a Dock icon.
+- Uses no global keyboard listener, network connection, account, analytics, or telemetry.
+- Clears retained text when CopyCue quits.
+
+## Requirements
+
+- Apple Silicon Mac
+- macOS 13 or later
+- Node.js 18 or later with npm, for the one-command installer
+
+Intel support, Developer ID signing, and notarization are not included in the current MVP.
+
+## Install
 
 ```bash
 npx --yes @morning-corp/copycue@latest install
 ```
 
-The current MVP package supports Apple Silicon Macs. It is ad-hoc signed, so macOS may require manual approval the first time it opens. See [PUBLISHING.md](PUBLISHING.md) for the maintainer release process and npm organization setup.
+CopyCue is installed at `~/Applications/CopyCue.app` and opens automatically. No administrator password or global npm installation is required.
 
-## Build and run
+The current MVP is ad-hoc signed. On some Macs, the first launch may require approval from **System Settings → Privacy & Security → Open Anyway**.
 
-Requirements: macOS 13 or later and a Swift toolchain from Xcode or the Command Line Tools.
+### Update
+
+Run the installation command again. The installer verifies and safely replaces the existing app bundle.
 
 ```bash
+npx --yes @morning-corp/copycue@latest install
+```
+
+### Uninstall
+
+```bash
+npx --yes @morning-corp/copycue@latest uninstall
+```
+
+## Use
+
+1. Start CopyCue and find the overlapping-pages icon in the menu bar.
+2. Copy text with Command-C, a context menu, or another application control.
+3. Look for the blue pointer indicator and temporary menu-bar confirmation.
+4. To recover overwritten text, open the CopyCue menu and choose **Restore previous**.
+5. Open **Settings…** to choose the cursor-feedback duration.
+
+CopyCue confirms clipboard changes. Because it deliberately does not intercept keyboard input, it cannot report a copy shortcut that failed before the clipboard changed.
+
+## Privacy
+
+CopyCue contains no networking or telemetry code. It reads the clipboard's plain-text representation only after macOS reports a change and retains at most two values of up to 1 MiB each in process memory. Larger clipboard changes still receive visual confirmation but are not retained in history.
+
+Clipboard history is not intentionally written to files, preferences, logs, or a database. The selected feedback duration is the only CopyCue setting stored in macOS user preferences. See [PRIVACY.md](PRIVACY.md) for the complete data-handling description.
+
+## Build from source
+
+Install Xcode 16 or another compatible Swift 6 toolchain, then run:
+
+```bash
+git clone https://github.com/IvanKomarov00/copycue.git
+cd copycue
 ./scripts/build-app.sh
 open dist/CopyCue.app
 ```
 
-The generated app is ad-hoc signed for local development. A polished public release should use a Developer ID certificate and notarization.
+The build script creates an ad-hoc-signed app at `dist/CopyCue.app`.
 
 ## Test
 
@@ -43,23 +89,23 @@ The generated app is ad-hoc signed for local development. A polished public rele
 npm test
 ```
 
-## Use
+The test suite covers two-item clipboard history, oversized-value rejection, installation, safe replacement, code-signature verification, and uninstallation. The project currently has no third-party npm or Swift package dependencies.
 
-1. Start CopyCue and look for the overlapping-pages icon in the macOS menu bar.
-2. Copy two different pieces of text using Command-C, a context menu, or any other method.
-3. Click the CopyCue icon and choose **Restore previous**.
-4. Paste normally with Command-V.
+## Contributing
 
-Choose **Settings…** from the menu-bar menu to adjust how long the blue cursor feedback remains visible.
+Issues and pull requests are welcome.
 
-Because CopyCue deliberately does not monitor keyboard input, it can confirm successful clipboard changes but cannot report a failed copy attempt.
+1. Fork the repository and create a focused branch.
+2. Add or update tests for behavioral changes.
+3. Run `npm test` locally.
+4. Open a pull request describing the problem, approach, and user-visible effect.
 
-## Privacy and security
+Keep CopyCue lightweight, local-first, and free of global keyboard monitoring. Maintainer release instructions are in [PUBLISHING.md](PUBLISHING.md).
 
-CopyCue has no network or analytics code. It does not monitor keyboard input and does not intentionally write clipboard history to disk. It retains at most two text values of up to 1 MiB each in process memory and clears them when the app quits. The menu displays shortened previews only after the user opens it.
+## Security
 
-See [PRIVACY.md](PRIVACY.md) for the data-handling details and [SECURITY.md](SECURITY.md) for responsible vulnerability reporting.
+Please do not disclose unpatched vulnerabilities in public issues. Follow [SECURITY.md](SECURITY.md) to submit a private vulnerability report through GitHub.
 
 ## License
 
-No open-source license has been granted yet. The source is publicly visible, but remains `UNLICENSED` until the project owner chooses a license.
+CopyCue is available under the [MIT License](LICENSE).

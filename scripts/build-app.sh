@@ -4,9 +4,13 @@ set -euo pipefail
 
 PROJECT_DIR="${0:A:h:h}"
 APP_DIR="$PROJECT_DIR/dist/CopyCue.app"
-CONTENTS_DIR="$APP_DIR/Contents"
+STAGING_DIR="$(mktemp -d "${TMPDIR:-/tmp}/copycue-build.XXXXXX")"
+STAGED_APP_DIR="$STAGING_DIR/CopyCue.app"
+CONTENTS_DIR="$STAGED_APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
+
+trap '/bin/rm -rf "$STAGING_DIR"' EXIT
 
 cd "$PROJECT_DIR"
 mkdir -p ".build/ModuleCache" ".cache"
@@ -21,14 +25,18 @@ fi
 
 swift build "${SWIFT_BUILD_FLAGS[@]}"
 
-/bin/rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 install -m 755 ".build/release/CopyCue" "$MACOS_DIR/CopyCue"
 install -m 644 "Resources/Info.plist" "$CONTENTS_DIR/Info.plist"
 
-xattr -cr "$APP_DIR"
-codesign --force --deep --sign - "$APP_DIR"
-xattr -cr "$APP_DIR"
-codesign --verify --deep --strict --verbose=2 "$APP_DIR"
+xattr -cr "$STAGED_APP_DIR"
+codesign --force --deep --sign - "$STAGED_APP_DIR"
+xattr -cr "$STAGED_APP_DIR"
+codesign --verify --deep --strict --verbose=2 "$STAGED_APP_DIR"
+
+/bin/rm -rf "$APP_DIR"
+mkdir -p "${APP_DIR:h}"
+/bin/cp -R -X "$STAGED_APP_DIR" "$APP_DIR"
+codesign --verify --deep --verbose=2 "$APP_DIR"
 
 echo "$APP_DIR"
