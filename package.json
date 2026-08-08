@@ -1,0 +1,50 @@
+{
+  "name": "@morning-corp/copycue",
+  "version": "0.1.1",
+  "description": "One-command installer for the CopyCue macOS clipboard feedback utility",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "bin": {
+    "copycue": "npm/bin/copycue.js"
+  },
+  "files": [
+    "npm/bin/copycue.js",
+    "dist/CopyCue.app",
+    "PRIVACY.md"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IvanKomarov00/copycue.git"
+  },
+  "homepage": "https://github.com/IvanKomarov00/copycue#readme",
+  "bugs": {
+    "url": "https://github.com/IvanKomarov00/copycue/issues"
+  },
+  "scripts": {
+    "build:app": "./scripts/build-app.sh",
+    "test:swift": "zsh ./scripts/test-swift.sh",
+    "test:installer": "node --test npm/test/*.test.js",
+    "test": "npm run test:swift && npm run build:app && npm run test:installer",
+    "verify:package": "node npm/scripts/verify-package.js",
+    "prepack": "npm run build:app && npm run verify:package",
+    "version": "node npm/scripts/sync-version.js"
+  },
+  "keywords": [
+    "macos",
+    "clipboard",
+    "menu-bar",
+    "productivity"
+  ]
+}

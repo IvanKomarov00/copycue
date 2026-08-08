@@ -1,0 +1,36 @@
+# Local credentials and signing material
+.env
+.env.*
+!.env.example
+.npmrc
+*.cer
+*.crt
+*.key
+*.mobileprovision
+*.p12
+*.p8
+*.pem
+*.pfx
+*.provisionprofile
+
+# Swift, Xcode, and packaged builds
+.build/
+.cache/
+.swiftpm/
+DerivedData/
+dist/
+*.app/
+*.dSYM/
+*.dmg
+*.pkg
+*.tgz
+*.xcarchive/
+
+# npm caches and logs
+.npm-cache/
+node_modules/
+npm-debug.log*
+
+# macOS metadata
+.DS_Store
+._*
