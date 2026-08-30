@@ -10,7 +10,7 @@
 
 Copy with confidence on macOS.
 
-CopyCue is a lightweight native menu-bar app that makes successful clipboard changes visible. Whenever the macOS clipboard changes, CopyCue briefly shows an Apple-blue indicator beneath the pointer and a confirmation in the menu bar. If a second copy overwrites something important, the immediately previous text remains available to restore.
+CopyCue is a lightweight native menu-bar app that makes successful clipboard changes visible. Whenever the macOS clipboard changes, CopyCue briefly shows an Apple-blue indicator near the pointer in your chosen position and a confirmation in the menu bar. If a second copy overwrites something important, the immediately previous text remains available to restore.
 
 ## Why CopyCue?
 
@@ -21,6 +21,7 @@ Pasting provides instant feedback; copying usually does not. CopyCue closes that
 - Confirms clipboard changes with subtle cursor and menu-bar feedback.
 - Keeps only the current and immediately previous distinct text values.
 - Restores accidentally overwritten text from the menu-bar menu.
+- Places the cursor indicator below, left, above, or right of the pointer.
 - Offers 0.5, 1, and 2 second cursor-feedback durations.
 - Runs as a native menu-bar utility without a Dock icon.
 - Uses no global keyboard listener, network connection, account, analytics, or telemetry.
@@ -64,7 +65,7 @@ npx --yes @morning-corp/copycue@latest uninstall
 2. Copy text with Command-C, a context menu, or another application control.
 3. Look for the blue pointer indicator and temporary menu-bar confirmation.
 4. To recover overwritten text, open the CopyCue menu and choose **Restore previous**.
-5. Open **Settings…** to choose the cursor-feedback duration.
+5. Open **Settings…** to choose the cursor-feedback position and duration.
 
 CopyCue confirms clipboard changes. Because it deliberately does not intercept keyboard input, it cannot report a copy shortcut that failed before the clipboard changed.
 
@@ -72,7 +73,7 @@ CopyCue confirms clipboard changes. Because it deliberately does not intercept k
 
 CopyCue contains no networking or telemetry code. It reads the clipboard's plain-text representation only after macOS reports a change and retains at most two values of up to 1 MiB each in process memory. Larger clipboard changes still receive visual confirmation but are not retained in history.
 
-Clipboard history is not intentionally written to files, preferences, logs, or a database. The selected feedback duration is the only CopyCue setting stored in macOS user preferences. See [PRIVACY.md](PRIVACY.md) for the complete data-handling description.
+Clipboard history is not intentionally written to files, preferences, logs, or a database. The selected feedback position and duration are stored in macOS user preferences. See [PRIVACY.md](PRIVACY.md) for the complete data-handling description.
 
 ## Build from source
 

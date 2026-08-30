@@ -1,11 +1,12 @@
 import AppKit
+import CopyCueCore
 import SwiftUI
 
 @MainActor
 final class SettingsWindowController: NSWindowController {
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 430),
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 560),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -40,6 +41,9 @@ private struct SettingsView: View {
     @AppStorage(FeedbackDurationOption.defaultsKey)
     private var durationRawValue = FeedbackDurationOption.medium.rawValue
 
+    @AppStorage(CursorFeedbackPosition.defaultsKey)
+    private var positionRawValue = CursorFeedbackPosition.below.rawValue
+
     let onDone: () -> Void
 
     private var durationSelection: Binding<FeedbackDurationOption> {
@@ -53,9 +57,22 @@ private struct SettingsView: View {
         )
     }
 
+    private var positionSelection: Binding<CursorFeedbackPosition> {
+        Binding(
+            get: {
+                CursorFeedbackPosition.resolve(positionRawValue)
+            },
+            set: { position in
+                positionRawValue = position.rawValue
+            }
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             introduction
+            sectionDivider
+            positionSettings
             sectionDivider
             durationSettings
             sectionDivider
@@ -73,7 +90,7 @@ private struct SettingsView: View {
         .padding(.horizontal, 28)
         .padding(.top, 24)
         .padding(.bottom, 22)
-        .frame(width: 520, height: 430)
+        .frame(width: 520, height: 560)
     }
 
     private var introduction: some View {
@@ -90,7 +107,7 @@ private struct SettingsView: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text("Copy with confidence")
                     .font(.title2.weight(.semibold))
-                Text("CopyCue confirms successful clipboard changes with a blue underline beneath the current cursor and a temporary menu-bar checkmark.")
+                Text("CopyCue confirms successful clipboard changes with a blue line near the current cursor in your chosen position and a temporary menu-bar checkmark.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -101,6 +118,28 @@ private struct SettingsView: View {
     private var sectionDivider: some View {
         Divider()
             .padding(.vertical, 19)
+    }
+
+    private var positionSettings: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Cursor feedback position")
+                .font(.headline)
+
+            Picker("Cursor feedback position", selection: positionSelection) {
+                ForEach(CursorFeedbackPosition.allCases) { position in
+                    Text(position.title).tag(position)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .controlSize(.large)
+            .frame(width: 360)
+            .frame(maxWidth: .infinity, alignment: .center)
+
+            Text("Choose where the blue line appears relative to the current cursor.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 
     private var durationSettings: some View {
@@ -131,7 +170,7 @@ private struct SettingsView: View {
             }
             .frame(maxWidth: .infinity, alignment: .center)
 
-            Text("Changes apply to the next copy and remain selected after CopyCue restarts.")
+            Text("Position and duration changes apply to the next copy and remain selected after CopyCue restarts.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

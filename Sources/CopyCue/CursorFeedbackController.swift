@@ -1,15 +1,9 @@
 import AppKit
+import CopyCueCore
 import QuartzCore
 
 @MainActor
 final class CursorFeedbackController: NSObject {
-    private struct Layout {
-        let width: CGFloat
-        let height: CGFloat
-        let xOffset: CGFloat
-        let topDistance: CGFloat
-    }
-
     enum Style {
         case copied
         case restored
@@ -26,6 +20,7 @@ final class CursorFeedbackController: NSObject {
     private let feedbackView: CursorFeedbackView
     private var animationGeneration = 0
     private var cursorFollowTimer: Timer?
+    private var activePosition = CursorFeedbackPosition.below
 
     override init() {
         panel = NSPanel(
@@ -55,6 +50,7 @@ final class CursorFeedbackController: NSObject {
         animationGeneration += 1
         let generation = animationGeneration
         let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        activePosition = CursorFeedbackPosition.current
 
         startFollowingCursor()
         panel.orderFrontRegardless()
@@ -95,25 +91,24 @@ final class CursorFeedbackController: NSObject {
     private func updatePanelPosition() {
         let pointer = NSEvent.mouseLocation
         let layout = currentLayout()
-        let capsuleBottom = pointer.y - layout.topDistance - layout.height
-        let panelFrame = NSRect(
-            x: pointer.x + layout.xOffset - shadowMargin,
-            y: capsuleBottom - shadowMargin,
-            width: layout.width + shadowMargin * 2,
-            height: layout.height + shadowMargin * 2
+        let placement = CursorFeedbackGeometry.placement(
+            pointer: pointer,
+            requestedPosition: activePosition,
+            layout: layout,
+            shadowMargin: shadowMargin,
+            screenFrame: screenFrame(containing: pointer)
         )
-        panel.setFrame(panelFrame, display: false)
-        feedbackView.updateCapsuleFrame(
-            CGRect(
-                x: shadowMargin,
-                y: shadowMargin,
-                width: layout.width,
-                height: layout.height
-            )
-        )
+        panel.setFrame(placement.panelFrame, display: false)
+        feedbackView.updateCapsuleFrame(placement.capsuleFrame)
     }
 
-    private func currentLayout() -> Layout {
+    private func screenFrame(containing point: NSPoint) -> NSRect? {
+        NSScreen.screens.first { screen in
+            NSMouseInRect(point, screen.frame, false)
+        }?.frame ?? NSScreen.main?.frame
+    }
+
+    private func currentLayout() -> CursorFeedbackLayout {
         guard let cursor = NSCursor.currentSystem else {
             return arrowLayout
         }
@@ -130,42 +125,82 @@ final class CursorFeedbackController: NSObject {
 
         if cursorMatches(cursor, NSCursor.iBeam)
             || cursorMatches(cursor, NSCursor.iBeamCursorForVerticalLayout) {
-            return Layout(width: 16, height: 3, xOffset: -8, topDistance: 13)
+            return cursorLayout(
+                for: cursor,
+                length: 16,
+                thickness: 3,
+                horizontalCenterOffset: 0,
+                belowDistance: 13
+            )
         }
 
         if cursorMatches(cursor, NSCursor.resizeLeftRight)
             || cursorMatches(cursor, NSCursor.resizeLeft)
             || cursorMatches(cursor, NSCursor.resizeRight)
             || matchesColumnResize {
-            return Layout(width: 26, height: 3.5, xOffset: -13, topDistance: 15)
+            return cursorLayout(
+                for: cursor,
+                length: 26,
+                thickness: 3.5,
+                horizontalCenterOffset: 0,
+                belowDistance: 15
+            )
         }
 
         if cursorMatches(cursor, NSCursor.resizeUpDown)
             || cursorMatches(cursor, NSCursor.resizeUp)
             || cursorMatches(cursor, NSCursor.resizeDown)
             || matchesRowResize {
-            return Layout(width: 8, height: 3, xOffset: -4, topDistance: 17)
+            return cursorLayout(
+                for: cursor,
+                length: 8,
+                thickness: 3,
+                horizontalCenterOffset: 0,
+                belowDistance: 17
+            )
         }
 
         if cursorMatches(cursor, NSCursor.pointingHand)
             || cursorMatches(cursor, NSCursor.openHand)
             || cursorMatches(cursor, NSCursor.closedHand) {
-            return Layout(width: 18, height: 3.5, xOffset: -6, topDistance: 26)
+            return cursorLayout(
+                for: cursor,
+                length: 18,
+                thickness: 3.5,
+                horizontalCenterOffset: 3,
+                belowDistance: 26
+            )
         }
 
         if cursorMatches(cursor, NSCursor.crosshair) {
-            return Layout(width: 13, height: 3.5, xOffset: -6.5, topDistance: 15)
+            return cursorLayout(
+                for: cursor,
+                length: 13,
+                thickness: 3.5,
+                horizontalCenterOffset: 0,
+                belowDistance: 15
+            )
         }
 
         if cursorMatches(cursor, NSCursor.arrow) {
-            return arrowLayout
+            return arrowLayout(for: cursor)
         }
 
         return fallbackLayout(for: cursor)
     }
 
-    private var arrowLayout: Layout {
-        Layout(width: 15, height: 3.5, xOffset: -3, topDistance: 18)
+    private var arrowLayout: CursorFeedbackLayout {
+        arrowLayout(for: nil)
+    }
+
+    private func arrowLayout(for cursor: NSCursor?) -> CursorFeedbackLayout {
+        cursorLayout(
+            for: cursor,
+            length: 15,
+            thickness: 3.5,
+            horizontalCenterOffset: 4.5,
+            belowDistance: 18
+        )
     }
 
     private func cursorMatches(_ cursor: NSCursor, _ reference: NSCursor) -> Bool {
@@ -180,7 +215,7 @@ final class CursorFeedbackController: NSObject {
             && abs(hotSpot.y - referenceHotSpot.y) < 0.75
     }
 
-    private func fallbackLayout(for cursor: NSCursor) -> Layout {
+    private func fallbackLayout(for cursor: NSCursor) -> CursorFeedbackLayout {
         let size = cursor.image.size
         let hotSpot = cursor.hotSpot
 
@@ -193,11 +228,86 @@ final class CursorFeedbackController: NSObject {
         let downExtent = max(size.height - hotSpot.y, 0)
         let topDistance = min(max(downExtent + 2, 14), 30)
 
-        return Layout(
-            width: width,
-            height: 3.5,
-            xOffset: cursorCenterOffset - width / 2,
-            topDistance: topDistance
+        return cursorLayout(
+            for: cursor,
+            length: width,
+            thickness: 3.5,
+            horizontalCenterOffset: cursorCenterOffset,
+            belowDistance: topDistance
+        )
+    }
+
+    private func cursorLayout(
+        for cursor: NSCursor?,
+        length: CGFloat,
+        thickness: CGFloat,
+        horizontalCenterOffset: CGFloat,
+        belowDistance: CGFloat
+    ) -> CursorFeedbackLayout {
+        let centeredOnHotSpot: CGFloat = 0
+        let below = CursorFeedbackSideLayout(
+            length: length,
+            thickness: thickness,
+            centerOffset: horizontalCenterOffset,
+            distance: belowDistance
+        )
+        let fallbackAbove = CursorFeedbackSideLayout(
+            length: length,
+            thickness: thickness,
+            centerOffset: centeredOnHotSpot,
+            distance: belowDistance
+        )
+        let fallbackSide = CursorFeedbackSideLayout.cursorSideIndicator(
+            baseLength: length,
+            thickness: thickness,
+            distance: belowDistance
+        )
+        let fallbackLayout = CursorFeedbackLayout(
+            below: below,
+            left: fallbackSide,
+            above: fallbackAbove,
+            right: fallbackSide
+        )
+
+        guard let cursor else {
+            return fallbackLayout
+        }
+
+        let size = cursor.image.size
+        let hotSpot = cursor.hotSpot
+        let metrics = [size.width, size.height, hotSpot.x, hotSpot.y]
+        let hasUsableMetrics = metrics.allSatisfy(\.isFinite)
+            && size.width > 0
+            && size.height > 0
+            && hotSpot.x >= 0
+            && hotSpot.y >= 0
+            && hotSpot.x <= size.width
+            && hotSpot.y <= size.height
+
+        guard hasUsableMetrics else {
+            return fallbackLayout
+        }
+
+        let edgeGap: CGFloat = 2
+        let verticalBaseLength = min(max(size.height * 0.65, 10), 24)
+        return CursorFeedbackLayout(
+            below: below,
+            left: CursorFeedbackSideLayout.cursorSideIndicator(
+                baseLength: verticalBaseLength,
+                thickness: thickness,
+                distance: hotSpot.x + edgeGap
+            ),
+            above: CursorFeedbackSideLayout(
+                length: length,
+                thickness: thickness,
+                centerOffset: centeredOnHotSpot,
+                distance: hotSpot.y + edgeGap
+            ),
+            right: CursorFeedbackSideLayout.cursorSideIndicator(
+                baseLength: verticalBaseLength,
+                thickness: thickness,
+                distance: size.width - hotSpot.x + edgeGap
+            )
         )
     }
 }
@@ -221,10 +331,11 @@ private final class CursorFeedbackView: NSView {
         super.layout()
         capsuleLayer.frame = bounds
 
+        let cornerRadius = min(capsuleFrame.width, capsuleFrame.height) / 2
         let path = CGPath(
             roundedRect: capsuleFrame,
-            cornerWidth: capsuleFrame.height / 2,
-            cornerHeight: capsuleFrame.height / 2,
+            cornerWidth: cornerRadius,
+            cornerHeight: cornerRadius,
             transform: nil
         )
         capsuleLayer.path = path

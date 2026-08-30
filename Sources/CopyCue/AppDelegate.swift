@@ -14,7 +14,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ClipboardMonitorDelega
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         UserDefaults.standard.register(defaults: [
-            FeedbackDurationOption.defaultsKey: FeedbackDurationOption.medium.rawValue
+            FeedbackDurationOption.defaultsKey: FeedbackDurationOption.medium.rawValue,
+            CursorFeedbackPosition.defaultsKey: CursorFeedbackPosition.below.rawValue
         ])
         NSApp.setActivationPolicy(.accessory)
         configureStatusItem()

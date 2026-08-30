@@ -13,7 +13,7 @@ CopyCue is designed to provide local visual feedback when the macOS clipboard ch
 - The current and immediately previous distinct text values are retained in process memory.
 - Each retained value is limited to 1 MiB of UTF-8 text. Larger clipboard changes still receive visual confirmation but are not retained in history.
 - Clipboard history is cleared when CopyCue quits. CopyCue does not intentionally write that history to files, preferences, logs, or a database.
-- The selected cursor-feedback duration is stored in macOS user preferences.
+- The selected cursor-feedback position and duration are stored in macOS user preferences.
 
 ## Data CopyCue displays
 
